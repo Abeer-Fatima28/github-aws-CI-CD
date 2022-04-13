@@ -12,7 +12,7 @@ Resources:
             Action: 'sts:AssumeRole'
       Policies:
         - PolicyName: Root
-          PoliyDocument:
+          PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Sid: CloudWatchLogsPolicy
@@ -39,36 +39,37 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
-                
   CodeBuildSourceCredential:
-    Type: AWS::CodeBuild::SourceCredential
+    Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
-        AuthType: PERSONAL_ACCESS_TOKEN
-        ServerType: GITHUB
-        Token: "{{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}"
-    
+      AuthType: PERSONAL_ACCESS_TOKEN
+      ServerType: GITHUB
+      Token: >-
+        {{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}
   CodeBuildProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
-      ServiceRole: !GetAtt CodeBuildServieRole.Arn
-      Source: 
+      ServiceRole: !GetAtt 
+        - CodeBuildServieRole
+        - Arn
+      Source:
         Type: GITHUB
-        Location: https://github.com/Abeer-Fatima28/github-aws-CI-CD.git
+        Location: 'https://github.com/Abeer-Fatima28/github-aws-CI-CD.git'
         BuildSpec: Buildspec.yaml
         Auth:
-            Type: OAUTH
-            Resource: !Ref CodeBuildSourceCredential
-        Artifacts: 
-            Type: NO_ARTIFACTS
+          Type: OAUTH
+          Resource: !Ref CodeBuildSourceCredential
+        Artifacts:
+          Type: NO_ARTIFACTS
         Triggers:
-            Webhook: true
-            FilterGroups:
-                - - Type: EVENT
-                    Pattern: PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED
-                  - Type: BASE_REF
-                    Pattern: !Sub ^refs/heads/master$
+          Webhook: true
+          FilterGroups:
+            - - Type: EVENT
+                Pattern: 'PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED'
+              - Type: BASE_REF
+                Pattern: !Sub ^refs/heads/master$
         Environment:
-            Type: LINUX_CONTAINER
-            ComputeType: BUILD_GENERALI_SMALL
-            Image: aws/codebuild/standard:4.0
+          Type: LINUX_CONTAINER
+          ComputeType: BUILD_GENERAL1_SMALL
+          Image: 'aws/codebuild/standard:4.0'
