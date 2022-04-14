@@ -1,10 +1,11 @@
 version: 0.2
 
-env:
-  variables:
-  ENV_NAME: dev
 phases:
   build:
     commands:
       - echo Entered the build phase...
       - echo Build started on `date`
+
+artifacts:
+   files:
+     - '**/*'
