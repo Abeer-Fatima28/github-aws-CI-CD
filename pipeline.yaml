@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Resources:
-  CodeBuildServieRole:
+  CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -11,7 +11,7 @@ Resources:
               Service: codebuild.amazonaws.com
             Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: Root
+        - PolicyName: root
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -21,24 +21,28 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
-                Resource: '*'
+                Resource:
+                  - '*'
               - Sid: S3GetObjectPolicy
                 Effect: Allow
                 Action:
                   - 's3:GetObject'
                   - 's3:GetObjectVersion'
-                Resource: '*'
+                Resource:
+                  - '*'
               - Sid: S3PutObjectPolicy
                 Effect: Allow
                 Action:
                   - 's3:PutObject'
-                Resource: '*'
+                Resource:
+                  - '*'
               - Sid: S3BucketIdentity
                 Effect: Allow
                 Action:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
-                Resource: '*'
+                Resource:
+                  - '*'
   CodeBuildSourceCredential:
     Type: 'AWS::CodeBuild::SourceCredential'
     Properties:
@@ -46,31 +50,32 @@ Resources:
       ServerType: GITHUB
       Token: >-
         {{resolve:secretsmanager:GITHUB_ACCESS:SecretString:GITHUB_ACCESS_TOKEN}}
-  CodeBuildProject:
+  CodeBuilProject:
     Type: 'AWS::CodeBuild::Project'
     Properties:
       Name: !Ref 'AWS::StackName'
       ServiceRole: !GetAtt 
-        - CodeBuildServieRole
+        - CodeBuildServiceRole
         - Arn
       Source:
         Type: GITHUB
-        Location: 'https://github.com/Abeer-Fatima28/github-aws-CI-CD.git'
-        BuildSpec: Buildspec.yaml
+        Location: !Sub 'https://github.com/Abeer-Fatima28/github-aws-CI-CD.git'
+        BuildSpec: buildspec.yaml
         Auth:
           Type: OAUTH
           Resource: !Ref CodeBuildSourceCredential
-        Artifacts:
-          Type: NO_ARTIFACTS
-        Triggers:
-          Webhook: true
-          FilterGroups:
-            - - Type: EVENT
-                Pattern: 'PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED'
-              - Type: BASE_REF
-                Pattern: !Sub ^refs/heads/master$
-        Environment:
-          Type: LINUX_CONTAINER
-          ComputeType: BUILD_GENERAL1_SMALL
-          Image: 'aws/codebuild/standard:4.0'
-
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: >-
+                PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
+                PULL_REQUEST_REOPENED
+            - Type: BASE_REF
+              Pattern: !Sub ^refs/heads/master$
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
